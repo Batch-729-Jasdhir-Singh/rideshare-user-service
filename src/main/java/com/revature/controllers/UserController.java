@@ -142,7 +142,6 @@ public class UserController {
 	@PostMapping
 	public Map<String, Set<String>> addUser(@Valid @RequestBody User user, BindingResult result) {
 
-		System.out.println(user.isDriver());
 		Map<String, Set<String>> errors = new HashMap<>();
 		String field, errorMessage;
 
