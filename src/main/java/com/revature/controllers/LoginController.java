@@ -52,11 +52,8 @@ public class LoginController {
 	private DistanceService ds;
 	
 	@GetMapping//("/{userName}/{passWord}")
-	public Map<String, Set<String>> login(
-							   @RequestParam(name="userName")String userName,
-							   @RequestParam(name="passWord")String passWord) {
+	public Map<String, Set<String>> login(@RequestParam(name="userName")String userName, @RequestParam(name="passWord")String passWord) {
 		
-		System.out.println(userName);
 		Map<String, Set<String>> errors = new HashMap<>();
 		if(userName.length() == 0) {
 		       errors.computeIfAbsent("userName", key -> new HashSet<>()).add("userName required!");

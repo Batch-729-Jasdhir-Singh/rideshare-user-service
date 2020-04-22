@@ -30,7 +30,6 @@ import com.google.maps.model.LatLng;
 import com.google.maps.model.TravelMode;
 import com.google.maps.model.Unit;
 import com.revature.beans.User;
-import com.revature.services.JSONReaderService;
 
 
 public interface DistanceService {

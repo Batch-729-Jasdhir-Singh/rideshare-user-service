@@ -5,6 +5,8 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.aspectj.lang.JoinPoint;
@@ -20,13 +22,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.revature.beans.Admin;
 import com.revature.beans.Batch;
 import com.revature.beans.Car;
 import com.revature.beans.User;
-
 
 @Aspect
 @Component
@@ -84,13 +88,14 @@ public class AspectLogging {
 	 * controllers.
 	 */
 
-	@Pointcut("execution(* com.revature.controllers.CarController.*(..)) || " + 
-			"execution(* com.revature.controllers.UserController.*(..)) || " + 
-			"execution(* com.revature.controllers.LoginController.*(..)) || " + 
-			"execution(* com.revature.controllers.BatchController.*(..)) || " + 
-			"execution(* com.revature.controllers.AdminController.*(..))")
-	public void allControllers() {}
-	
+	@Pointcut("execution(* com.revature.controllers.CarController.*(..)) || "
+			+ "execution(* com.revature.controllers.UserController.*(..)) || "
+			+ "execution(* com.revature.controllers.LoginController.*(..)) || "
+			+ "execution(* com.revature.controllers.BatchController.*(..)) || "
+			+ "execution(* com.revature.controllers.AdminController.*(..))")
+	public void allControllers() {
+	}
+
 	@AfterReturning(pointcut = "allControllers()", returning = "retVal")
 	public void logCarHttpStatusResponse(ResponseEntity<Car> retVal) {
 
@@ -104,14 +109,14 @@ public class AspectLogging {
 		LOGGER.info("Status Code: " + retVal.getStatusCode() + " Message: " + retVal.getStatusCode().getReasonPhrase());
 
 	}
-	
+
 	@AfterReturning(pointcut = "allControllers()", returning = "retVal")
 	public void logBatchHttpStatusResponse(ResponseEntity<Batch> retVal) {
 
 		LOGGER.info("Status Code: " + retVal.getStatusCode() + " Message: " + retVal.getStatusCode().getReasonPhrase());
 
 	}
-	
+
 	@AfterReturning(pointcut = "allControllers()", returning = "retVal")
 	public void logAdminHttpStatusResponse(ResponseEntity<Admin> retVal) {
 
@@ -119,48 +124,53 @@ public class AspectLogging {
 
 	}
 
-	
 	/*
-	 * Everytime I use a method with "PostMapping" annotation I want to get the request body
+	 * Everytime I use a method with "PostMapping" annotation I want to get the
+	 * request body
 	 */
+
+	@Pointcut("execution(* com.revature.controllers.CarController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..)) || "
+			+ "execution(* com.revature.controllers.UserController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..)) ||"
+			+ "execution(* com.revature.controllers.LoginController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..)) ||"
+			+ "execution(* com.revature.controllers.BatchController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..)) ||"
+			+ "execution(* com.revature.controllers.AdminController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..))")
+	public void executeController() {
+	}
+
+	@Pointcut("@annotation(org.springframework.web.bind.annotation.RequestMapping) || "
+			+ "@annotation(org.springframework.web.bind.annotation.PostMapping) || "
+			+ "@annotation(org.springframework.web.bind.annotation.PutMapping) || "
+			+ "@annotation(org.springframework.web.bind.annotation.GetMapping) || "
+			+ "@annotation(org.springframework.web.bind.annotation.ExceptionHandler)")
+	public void logRequestMapping() {
+	}
+
+	@Before("logRequestMapping() &&" + "executeController()")
+	public void logRequestBody(JoinPoint thisJoinPoint) {
+		MethodSignature methodSignature = (MethodSignature) thisJoinPoint.getSignature();
+		Annotation[][] annotationMatrix = methodSignature.getMethod().getParameterAnnotations();
+		int index = -1;
+		for (Annotation[] annotations : annotationMatrix) {
+			index++;
+			for (Annotation annotation : annotations) {
+				if ( annotation instanceof RequestBody ) {
+					LOGGER.info("Package Location of method called: " + methodSignature.getDeclaringTypeName());
+					LOGGER.info("Name of method: " + methodSignature.getName());
+					Object requestBody = thisJoinPoint.getArgs()[index];
+					LOGGER.info("Request Body = " + requestBody);
+				}
+			}
+		}
+	}
+
+	@Pointcut("execution(* org.springframework.web.servlet.DispatcherServlet.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..))")
+	public void executeHeaderController() {
+	}
 	
-	@Pointcut("execution(* com.revature.controllers.CarController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..)) || " + 
-	"execution(* com.revature.controllers.UserController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..)) ||" + 
-	"execution(* com.revature.controllers.LoginController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..)) ||" + 
-	"execution(* com.revature.controllers.BatchController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..)) ||" + 
-	"execution(* com.revature.controllers.AdminController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..))")
-	  public void executeController() {}
-
-
-	  @Pointcut(
-	      "@annotation(org.springframework.web.bind.annotation.RequestMapping) || " +
-	      "@annotation(org.springframework.web.bind.annotation.PostMapping) || " +
-	      "@annotation(org.springframework.web.bind.annotation.PutMapping) || " +
-	      "@annotation(org.springframework.web.bind.annotation.ExceptionHandler)"
-	    )
-	  public void logRequestMapping() {}
-
-	  @Before(
-	    "logRequestMapping() &&" +
-	    "executeController()"
-	  )
-	  public void logRequestBody(JoinPoint thisJoinPoint) {
-	    MethodSignature methodSignature = (MethodSignature) thisJoinPoint.getSignature();
-	    Annotation[][] annotationMatrix = methodSignature.getMethod().getParameterAnnotations();
-	    int index = -1;
-	    for (Annotation[] annotations : annotationMatrix) {
-	      index++;
-	      for (Annotation annotation : annotations) {
-	        if (!(annotation instanceof RequestBody))
-	          continue;
-	        Object requestBody = thisJoinPoint.getArgs()[index];
-	        LOGGER.info("Package Location of method called: " + methodSignature.getDeclaringTypeName());
-	        LOGGER.info("Name of method: " + methodSignature.getName());
-	        LOGGER.info("Request Body = " + requestBody);
-	        
-	        
-	      }
-	    }
-	  }
-
+	@Before("logRequestMapping()")
+	public void logRequestHeader(JoinPoint thisJoinPoint) {
+		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+		LOGGER.info(request.getMethod() +" to "+ thisJoinPoint.getTarget() + " from " + request.getRemoteAddr());
+		
+	}
 }
