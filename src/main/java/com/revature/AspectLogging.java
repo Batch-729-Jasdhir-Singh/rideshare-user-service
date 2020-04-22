@@ -22,7 +22,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-
+import com.revature.beans.Admin;
+import com.revature.beans.Batch;
 import com.revature.beans.Car;
 import com.revature.beans.User;
 
@@ -83,10 +84,10 @@ public class AspectLogging {
 	 * controllers.
 	 */
 
-	@Pointcut("execution(* com.revature.controllers.CarController.*(..))" + 
-			"execution(* com.revature.controllers.UserController.*(..)" + 
-			"execution(* com.revature.controllers.LoginController.*(..))" + 
-			"execution(* com.revature.controllers.BatchController.*(..))" + 
+	@Pointcut("execution(* com.revature.controllers.CarController.*(..)) || " + 
+			"execution(* com.revature.controllers.UserController.*(..)) || " + 
+			"execution(* com.revature.controllers.LoginController.*(..)) || " + 
+			"execution(* com.revature.controllers.BatchController.*(..)) || " + 
 			"execution(* com.revature.controllers.AdminController.*(..))")
 	public void allControllers() {}
 	
@@ -103,16 +104,30 @@ public class AspectLogging {
 		LOGGER.info("Status Code: " + retVal.getStatusCode() + " Message: " + retVal.getStatusCode().getReasonPhrase());
 
 	}
+	
+	@AfterReturning(pointcut = "allControllers()", returning = "retVal")
+	public void logBatchHttpStatusResponse(ResponseEntity<Batch> retVal) {
+
+		LOGGER.info("Status Code: " + retVal.getStatusCode() + " Message: " + retVal.getStatusCode().getReasonPhrase());
+
+	}
+	
+	@AfterReturning(pointcut = "allControllers()", returning = "retVal")
+	public void logAdminHttpStatusResponse(ResponseEntity<Admin> retVal) {
+
+		LOGGER.info("Status Code: " + retVal.getStatusCode() + " Message: " + retVal.getStatusCode().getReasonPhrase());
+
+	}
 
 	
 	/*
 	 * Everytime I use a method with "PostMapping" annotation I want to get the request body
 	 */
 	
-	@Pointcut("execution(* com.revature.controllers.CarController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..))" + 
-	"execution(* com.revature.controllers.UserController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..))" + 
-	"execution(* com.revature.controllers.LoginController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..))" + 
-	"execution(* com.revature.controllers.BatchController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..))" + 
+	@Pointcut("execution(* com.revature.controllers.CarController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..)) || " + 
+	"execution(* com.revature.controllers.UserController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..)) ||" + 
+	"execution(* com.revature.controllers.LoginController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..)) ||" + 
+	"execution(* com.revature.controllers.BatchController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..)) ||" + 
 	"execution(* com.revature.controllers.AdminController.*(.., @org.springframework.web.bind.annotation.RequestBody (*), ..))")
 	  public void executeController() {}
 
@@ -120,7 +135,7 @@ public class AspectLogging {
 	  @Pointcut(
 	      "@annotation(org.springframework.web.bind.annotation.RequestMapping) || " +
 	      "@annotation(org.springframework.web.bind.annotation.PostMapping) || " +
-	      "@annotation(org.springframework.web.bind.annotation.PutMapping) ||" +
+	      "@annotation(org.springframework.web.bind.annotation.PutMapping) || " +
 	      "@annotation(org.springframework.web.bind.annotation.ExceptionHandler)"
 	    )
 	  public void logRequestMapping() {}
