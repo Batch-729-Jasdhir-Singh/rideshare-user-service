@@ -47,18 +47,10 @@ public class DistanceServiceImpl implements DistanceService {
 	//Currently works under the assumption that they will work in the same building, but does not explicitly exclude drivers who don't
 	public List<User> recommendDrivers(User rider, int recCount){
 		
-		List<User> activeDrivers = us.getActiveDrivers();
+		List<User> activeDrivers = getBatchActiveDrivers(rider);
 
 		String[] destinations = initDestinations(rider);
 		String[] origins = initOrigins(rider, activeDrivers);
-		
-		//Iterates through list of drivers and removes rider (if there)
-		for(User u : new ArrayList<User>(activeDrivers))
-		{
-			if (u.equals(rider)) {
-				activeDrivers.remove(u);
-			}
-		}
 		
 		//List of the calculated ((DriverToRider+RiderToWork) - DriverToWork) aka added distances
 		List<Double> calcDistances = new ArrayList<Double>();
@@ -76,6 +68,11 @@ public class DistanceServiceImpl implements DistanceService {
 						.boxed().sorted((i,j) -> finCalcDistances.get(i).compareTo(finCalcDistances.get(j)))
 						.mapToInt(ele -> ele).toArray();
 		
+		//Catches index out of bounds and returns as many as it can recommend
+		if (activeDrivers.size() < recCount) {
+			recCount = activeDrivers.size();
+		}
+		
 		//List to store the top n users that will be returned
 		List<User> sortedUsers = new ArrayList<User>();
 		for (int i = 0; i < recCount; i++) {
@@ -83,6 +80,22 @@ public class DistanceServiceImpl implements DistanceService {
 		}
 		
 		return sortedUsers;
+	}
+	
+	//Gets all active drivers, of the same batch, that are not the rider
+	public List<User> getBatchActiveDrivers(User rider){
+		List<User> activeDrivers = us.getActiveDrivers();
+		List<User> driverList = new ArrayList<User>();
+		
+		for (User driver : activeDrivers) {
+			if (driver.getBatch().equals(rider.getBatch())) {
+				if (!driver.equals(rider)) {
+					driverList.add(driver);
+				}
+			}
+		}
+
+		return driverList;
 	}
 	
 	
@@ -185,13 +198,7 @@ public class DistanceServiceImpl implements DistanceService {
 		
 	}
 
-	@Override
-	public List<User> distanceMatrix(String[] origins, String[] destinations)
-			throws ApiException, InterruptedException, IOException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
+
 	
 	
 	
