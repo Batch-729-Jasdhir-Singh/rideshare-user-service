@@ -109,19 +109,6 @@ public class DistanceServiceImplTest {
 		
 	}
 	
-	//legacyCode stuff
-	@Test
-	public void testDistanceMatrix() {
-		String[] origins = dsi.initOrigins(testRider, driverList);
-		String[] destinations = dsi.initDestinations(testRider);
-		List<User> distDrivers = new ArrayList<User>();
-		try {
-			distDrivers = dsi.distanceMatrix(origins, destinations);
-		} catch (Exception e) {
-			e.printStackTrace();
-		} 
-		System.out.println(distDrivers);
-	}
 	
 	
 	
