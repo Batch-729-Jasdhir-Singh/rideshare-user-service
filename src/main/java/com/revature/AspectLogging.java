@@ -169,8 +169,10 @@ public class AspectLogging {
 	
 	@Before("logRequestMapping()")
 	public void logRequestHeader(JoinPoint thisJoinPoint) {
+		
+		MethodSignature methodSignature = (MethodSignature) thisJoinPoint.getSignature();
 		HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-		LOGGER.info(request.getMethod() +" to "+ thisJoinPoint.getTarget() + " from " + request.getRemoteAddr());
+		LOGGER.info(request.getMethod() +" to "+methodSignature.getDeclaringTypeName() + " " + methodSignature.getName() + " from " + request.getRemoteAddr());
 		
 	}
 }
