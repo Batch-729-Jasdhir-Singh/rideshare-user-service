@@ -109,6 +109,26 @@ public class DistanceServiceImplTest {
 		
 	}
 	
+	@Test
+	public void getBatchActiveDrivers() {
+		List<User> testUList = new ArrayList<User>();
+		testUList.add(testRider);
+		testUList.add(driverOne);
+		testUList.add(driverTwo);
+		
+		//Testing a user from a different batch
+		User testRider2 = new User(4, "TestUserBat", new Batch(1, "Morgantown"), "Fred2", "Jones2", "FJ2Test@gmail.com", "1234561234", false, true, false,
+				"1400 Dulles Plaza", "Herndon", "11112", "Virginia", "11730 Plaza America Dr.", "Reston", "11111", "Virginia");
+		testUList.add(testRider2);
+		
+		Mockito.when(us.getActiveDrivers()).thenReturn(testUList);
+		List<User> updatedList = dsi.getBatchActiveDrivers(testRider);
+		
+		assertTrue(updatedList.contains(driverOne));
+		assertTrue(updatedList.contains(driverTwo));
+		assertFalse(updatedList.contains(testRider));
+		assertFalse(updatedList.contains(testRider2));
+	}
 	
 	
 	
